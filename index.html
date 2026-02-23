@@ -256,21 +256,62 @@
 
         <div class="grid-container">
             
-            <!-- İletişim Kartı -->
-            <section class="card contact">
-                <h2><i class="fas fa-network-wired"></i>Contact Me</h2>
+            <section class="card" style="--hover-color: var(--accent-cyan); grid-column: 1 / -1;">
+                <h2><i class="fas fa-user-astronaut"></i> The Architect</h2>
+                <p style="color: #ccc; margin-bottom: 1rem;">
+                    B.Sc. in Artificial Intelligence Engineering. Passionate about applying High-Performance Computing (HPC) and Deep Learning to Astrophysics and Environmental Modeling.
+                </p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <span class="status-badge" style="background: rgba(189, 0, 255, 0.1); border-color: var(--accent-purple); color: var(--accent-purple);">Physics-Guided AI</span>
+                    <span class="status-badge">Spectroscopy</span>
+                    <span class="status-badge" style="background: rgba(0, 255, 65, 0.1); border-color: var(--accent-green); color: var(--accent-green);">Polars / Rust</span>
+                </div>
+            </section>
+
+            <section class="card download">
+                <h2><i class="fas fa-rocket"></i> Featured Projects</h2>
                 <ul class="link-list">
                     <li>
-                        <a href="https://instagram.com/iristo.tech" target="_blank" class="link-item">
-                            <i class="fab fa-instagram" style="color: #E1306C;"></i>
-                            <span>iristo.tech</span>
+                        <a href="https://github.com/OpenAstronomy/gsoc-proposals" target="_blank" class="link-item" style="align-items: flex-start; flex-direction: column;">
+                            <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                                <i class="fas fa-star" style="color: #FFD700;"></i>
+                                <span style="color: #fff; font-weight: bold;">OpenAstronomy (GSoC '26)</span>
+                            </div>
+                            <span style="font-size: 0.85rem; color: var(--text-muted); margin-left: 35px;">Modernizing RADIS spectroscopic engine using Polars/DuckDB for out-of-core data parsing.</span>
                         </a>
                     </li>
                     <li>
-                        <div class="link-item">
-                            <i class="fab fa-discord" style="color: #5865F2;"></i>
-                            <span>archiristo</span>
+                        <div class="link-item" style="align-items: flex-start; flex-direction: column;">
+                            <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                                <i class="fas fa-satellite" style="color: var(--accent-cyan);"></i>
+                                <span style="color: #fff; font-weight: bold;">ESO Data Analysis</span>
+                            </div>
+                            <span style="font-size: 0.85rem; color: var(--text-muted); margin-left: 35px;">Handling and profiling large-scale astronomical datasets.</span>
                         </div>
+                    </li>
+                    <li>
+                        <div class="link-item" style="align-items: flex-start; flex-direction: column;">
+                            <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                                <i class="fas fa-leaf" style="color: var(--accent-green);"></i>
+                                <span style="color: #fff; font-weight: bold;">TÜBİTAK 2209-A</span>
+                            </div>
+                            <span style="font-size: 0.85rem; color: var(--text-muted); margin-left: 35px;">Modeling the effects of air quality on respiratory illnesses using deep learning.</span>
+                        </div>
+                    </li>
+                </ul>
+            </section>
+
+            <section class="card contact">
+                <h2><i class="fas fa-network-wired"></i> Radar & Comms</h2>
+                <ul class="link-list">
+                    <li>
+                        <a href="https://mathcs.online" target="_blank" class="link-item">
+                            <i class="fas fa-blog" style="color: var(--accent-purple);"></i>
+                            <div>
+                                <span style="color: #fff; display: block;">mathcs.online</span>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">My academic and technical blog.</span>
+                            </div>
+                        </a>
                     </li>
                     <li>
                         <a href="https://github.com/archiristo" target="_blank" class="link-item">
@@ -285,19 +326,6 @@
                         </a>
                     </li>
                 </ul>
-            </section>
-
-            <!-- İndirme / Projeler Kartı -->
-            <section class="card download">
-                <h2><i class="fas fa-terminal"></i> Projects</h2>
-                <p style="color: #ccc; margin-bottom: 1rem;">
-                    Access to source codes and compiled binaries.
-                </p>
-                <div style="text-align: center; padding: 2rem 0; border: 1px dashed #333; border-radius: 8px;">
-                    <i class="fas fa-folder-open" style="font-size: 2rem; color: #333; margin-bottom: 10px;"></i>
-                    <p style="font-size: 0.9rem; color: #666;">Directory is currently empty.</p>
-                    <span class="status-badge">New projects coming soon...</span>
-                </div>
             </section>
 
         </div>
