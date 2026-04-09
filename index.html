@@ -278,35 +278,49 @@
             event.currentTarget.classList.add('active');
         }
 
-        // archiristo Kanal ID'si
+// archiristo Kanal ID'si ve Doğrudan XML Beslemesi
 const channelId = 'UCbOuBptByVSQVwrIxpyt0_g';
 const rssUrl = encodeURIComponent(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`);
-const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
 
-// Videoları YouTube'dan Çekme Fonksiyonu
-fetch(apiUrl)
-    .then(response => response.json())
+// Güvenilir, çökmez AllOrigins Proxy'si
+const proxyUrl = `https://api.allorigins.win/raw?url=${rssUrl}`;
+
+fetch(proxyUrl)
+    .then(response => response.text())
+    .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
     .then(data => {
         const grid = document.getElementById('youtube-grid');
-        if(data.status === 'ok') {
-            grid.innerHTML = ''; // Loading yazısını temizle
-            data.items.forEach(item => {
-                // Her video için bir kart oluştur
-                const cardHtml = `
-                    <div class="video-card">
-                        <a href="${item.link}" target="_blank">
-                            <img src="${item.thumbnail}" alt="${item.title}">
-                            <div class="video-title">> ${item.title}</div>
-                        </a>
-                    </div>
-                `;
-                grid.innerHTML += cardHtml; // Izgaraya ekle
-            });
-        }
+        grid.innerHTML = ''; // Loading yazısını temizle
+        
+        // XML içindeki her bir <entry> (Video) etiketini yakala
+        const entries = data.querySelectorAll('entry');
+        
+        entries.forEach(entry => {
+            // Verileri Parse Et (Ayrıştır)
+            const title = entry.querySelector('title').textContent;
+            const link = entry.querySelector('link').getAttribute('href');
+            
+            // Linkin içinden Video ID'sini cımbızla (Hack!)
+            const videoId = link.split('v=')[1];
+            
+            // YouTube'un kendi yüksek çözünürlüklü thumbnail sunucusunu kullan
+            const thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+            
+            // Kartı oluştur ve Izgaraya yolla
+            const cardHtml = `
+                <div class="video-card">
+                    <a href="${link}" target="_blank">
+                        <img src="${thumbnail}" alt="${title}">
+                        <div class="video-title">> ${title}</div>
+                    </a>
+                </div>
+            `;
+            grid.innerHTML += cardHtml; 
+        });
     })
     .catch(error => {
-        document.getElementById('loading-text').innerText = '> Error: Connection lost.';
-        console.error('Fetch error:', error);
+        document.getElementById('loading-text').innerText = '> System Error: Failed to fetch the archive.';
+        console.error('Core Logic Error:', error);
     });
     </script>
 
