@@ -217,15 +217,49 @@
         </div>
 
         <div id="archive" class="tab-content">
-            <div class="card" style="text-align: center; border-color: var(--accent-purple);">
-                <h2><i class="fas fa-compact-disc" style="color: var(--accent-purple);"></i> digital_memory</h2>
-                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
-                    Not a show-off. Just an autonomous log of archery targets hit, guitar strings pulled, and chaotic vlogs.
-                </p>
-                <a href="#" style="color: var(--accent-purple); font-family: 'Fira Code'; text-decoration: none;">[ Initialize Video Grid... ]</a>
-            </div>
+    <div class="card" style="border-color: var(--accent-purple);">
+        <h2><i class="fas fa-satellite-dish" style="color: var(--accent-purple);"></i> digital_memory_feed</h2>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+            Autonomous log initialized. Fetching signals from YouTube...
+        </p>
+        
+        <div id="youtube-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <p id="loading-text" style="color: var(--accent-cyan); font-family: 'Fira Code', monospace; animation: blink-caret 1s infinite;">
+                > Connecting to archiristo database...
+            </p>
         </div>
-    </main>
+    </div>
+</div>
+
+<style>
+    /* Videolar için özel Polaroid / Neon CSS */
+    .video-card {
+        background: #0a0a0a;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    .video-card:hover {
+        border-color: var(--accent-purple);
+        transform: scale(1.02);
+        box-shadow: 0 0 15px rgba(189, 0, 255, 0.2);
+    }
+    .video-card img {
+        width: 100%;
+        display: block;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .video-title {
+        font-size: 0.85rem;
+        padding: 0.8rem;
+        color: var(--text-main);
+        text-decoration: none;
+        display: block;
+        font-family: 'Inter', sans-serif;
+    }
+    .video-card a { text-decoration: none; }
+</style>
 
     <script>
         function openTab(tabName) {
@@ -243,6 +277,37 @@
             document.getElementById(tabName).classList.add('active');
             event.currentTarget.classList.add('active');
         }
+
+        // archiristo Kanal ID'si
+const channelId = 'UCbOuBptByVSQVwrIxpyt0_g';
+const rssUrl = encodeURIComponent(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`);
+const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
+
+// Videoları YouTube'dan Çekme Fonksiyonu
+fetch(apiUrl)
+    .then(response => response.json())
+    .then(data => {
+        const grid = document.getElementById('youtube-grid');
+        if(data.status === 'ok') {
+            grid.innerHTML = ''; // Loading yazısını temizle
+            data.items.forEach(item => {
+                // Her video için bir kart oluştur
+                const cardHtml = `
+                    <div class="video-card">
+                        <a href="${item.link}" target="_blank">
+                            <img src="${item.thumbnail}" alt="${item.title}">
+                            <div class="video-title">> ${item.title}</div>
+                        </a>
+                    </div>
+                `;
+                grid.innerHTML += cardHtml; // Izgaraya ekle
+            });
+        }
+    })
+    .catch(error => {
+        document.getElementById('loading-text').innerText = '> Error: Connection lost.';
+        console.error('Fetch error:', error);
+    });
     </script>
 
 </body>
