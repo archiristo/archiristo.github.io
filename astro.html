@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astro MathCS | Command Center</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/satellite.js@4.1.4/dist/satellite.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { space: { 900: '#020617', 800: '#0f172a' } }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top center, #0f172a 0%, #020617 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .mono { font-family: 'Fira Code', monospace; }
+
+        /* Glassmorphism Kart Stili */
+        .bento-card {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            transition: border-color 0.3s ease;
+        }
+        .bento-card:hover { border-color: rgba(148, 163, 184, 0.4); }
+
+        /* Modül Başlık Etiketleri */
+        .module-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+            border-left: 2px solid;
+        }
+
+        #map { height: 250px; border-radius: 0.75rem; z-index: 1; }
+        .leaflet-container { background: #020617 !important; }
+        
+        #galaxy-canvas { width: 100%; height: 350px; border-radius: 0.75rem; background: #000; }
+        
+        /* Animasyonlar */
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        .animate-pulse-glow { animation: pulse-glow 2s infinite; }
+    </style>
+</head>
+<body class="selection:bg-cyan-500/30">
+
+    <nav class="border-b border-slate-800/50 bg-space-900/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-[1600px] mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="font-bold text-xl tracking-tight">
+                <i class="fas fa-atom text-cyan-500 mr-2"></i> Astro MathCS
+            </div>
+            <a href="index.html" class="text-sm text-slate-400 hover:text-white mono transition-colors">
+                <i class="fas fa-arrow-left"></i> ~/archiristo_OS
+            </a>
+        </div>
+    </nav>
+
+    <main class="max-w-[1600px] mx-auto px-4 py-8 lg:py-12">
+        
+        <header class="mb-10 animate-fade-in">
+            <h1 class="text-3xl lg:text-4xl font-bold mb-2">Atmospheric & Orbital Sync</h1>
+            <p class="text-slate-400 mono text-sm flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-glow"></span>
+                SYSTEM ONLINE | SGP4 PROPAGATION ACTIVE
+            </p>
+        </header>
+
+        <div class="grid grid-cols-12 gap-6">
+            
+            <div class="col-span-12 lg:col-span-4 space-y-6">
+                
+                <div class="bento-card">
+                    <p class="module-label text-cyan-500 border-cyan-500">Live Telemetry</p>
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-lg font-semibold">ISS Tracking</h2>
+                            <p class="text-xs text-slate-400 mono mt-1">TLE Propagation & Geodetic mapping</p>
+                        </div>
+                    </div>
+                    
+                    <div id="map" class="mb-4 border border-slate-700/50"></div>
+                    
+                    <div class="grid grid-cols-2 gap-2 text-sm mono">
+                        <div class="bg-slate-800/50 p-2 rounded border border-slate-700/30">
+                            <span class="text-slate-400 text-xs block">LATITUDE</span>
+                            <span id="iss-lat" class="text-cyan-400">Loading...</span>
+                        </div>
+                        <div class="bg-slate-800/50 p-2 rounded border border-slate-700/30">
+                            <span class="text-slate-400 text-xs block">LONGITUDE</span>
+                            <span id="iss-lon" class="text-cyan-400">Loading...</span>
+                        </div>
+                        <div class="bg-slate-800/50 p-2 rounded border border-slate-700/30">
+                            <span class="text-slate-400 text-xs block">ALTITUDE</span>
+                            <span id="iss-alt" class="text-white">-- km</span>
+                        </div>
+                        <div class="bg-slate-800/50 p-2 rounded border border-slate-700/30">
+                            <span class="text-slate-400 text-xs block">VELOCITY</span>
+                            <span id="iss-vel" class="text-white">-- km/s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bento-card">
+                    <p class="module-label text-orange-500 border-orange-500">Daily Discovery</p>
+                    <h2 class="text-lg font-semibold mb-1">Cosmic Feed</h2>
+                    <p class="text-xs text-slate-400 mono mb-4">NASA Astronomy Picture of the Day</p>
+                    
+                    <div id="apod-container" class="relative rounded-lg overflow-hidden border border-slate-700/50 group cursor-pointer">
+                        <div class="absolute inset-0 flex items-center justify-center bg-slate-800 animate-pulse" id="apod-loader">
+                            <i class="fas fa-circle-notch fa-spin text-orange-500"></i>
+                        </div>
+                        <img id="apod-img" src="" alt="APOD" class="w-full h-48 object-cover opacity-0 transition-opacity duration-500 group-hover:scale-105">
+                        <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 to-transparent p-3">
+                            <h3 id="apod-title" class="text-sm font-semibold truncate">Connecting to NASA...</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-12 lg:col-span-8 space-y-6">
+                
+                <div class="bento-card relative overflow-hidden">
+                    <p class="module-label text-fuchsia-500 border-fuchsia-500">Integral Field Spectroscopy (3D)</p>
+                    <div class="absolute top-6 right-6 text-right">
+                        <h2 class="text-lg font-semibold">IFS Kinematics</h2>
+                        <p class="text-xs text-slate-400 mono">WebGL Particle Engine</p>
+                    </div>
+                    
+                    <div id="galaxy-canvas" class="mt-2 border border-slate-700/50 cursor-move"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div class="bento-card">
+                        <p class="module-label text-indigo-500 border-indigo-500">Kinematic Analysis</p>
+                        <h2 class="text-lg font-semibold mb-1">Dark Matter Gap</h2>
+                        <p class="text-xs text-slate-400 mono mb-4">v = √(GM/r) vs Observed</p>
+                        
+                        <div class="h-32 flex items-end gap-2 border-b border-l border-slate-700 px-2 pb-2">
+                            <div class="w-1/4 bg-slate-700 h-[30%] rounded-t relative"><span class="absolute -top-5 text-[10px] mono">Core</span></div>
+                            <div class="w-1/4 bg-indigo-500/50 h-[60%] rounded-t relative"><span class="absolute -top-5 text-[10px] mono text-indigo-300">Disk</span></div>
+                            <div class="w-1/4 bg-indigo-500 h-[85%] rounded-t relative"><span class="absolute -top-5 text-[10px] mono text-indigo-400">Halo</span></div>
+                            <div class="w-1/4 bg-indigo-400 h-[95%] rounded-t relative"><span class="absolute -top-5 text-[10px] mono text-indigo-200">Edge</span></div>
+                        </div>
+                    </div>
+
+                    <div class="bento-card">
+                        <p class="module-label text-emerald-500 border-emerald-500">Spectral Shift Engine</p>
+                        <h2 class="text-lg font-semibold mb-1">Doppler Analysis</h2>
+                        <p class="text-xs text-slate-400 mono mb-4">Redshift Processing</p>
+                        
+                        <div class="h-32 flex items-center justify-center bg-slate-900/50 rounded border border-slate-700/50 overflow-hidden relative">
+                            <svg class="w-full h-full opacity-60" viewBox="0 0 100 20" preserveAspectRatio="none">
+                                <path d="M0,10 Q5,5 10,10 T20,10 T30,10 T40,2 T50,10 T60,10 T70,18 T80,10 T90,10 T100,10" fill="none" stroke="#10b981" stroke-width="0.5" class="animate-pulse" />
+                            </svg>
+                            <div class="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-transparent to-red-500/20 mix-blend-overlay"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // 1. ISS TRACKER LOGIC (Leaflet + satellite.js)
+        const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([37.0000, 35.3213], 3);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        
+        const satIcon = L.divIcon({
+            className: 'custom-sat-icon',
+            html: '<div style="background:#06b6d4;width:12px;height:12px;border-radius:50%;box-shadow:0 0 15px #06b6d4;"></div>',
+            iconSize: [12, 12], iconAnchor: [6, 6]
+        });
+        let satMarker = L.marker([0, 0], { icon: satIcon }).addTo(map);
+
+        // ISS TLE (Demo Data - In production, fetch from Celestrak as discussed)
+        const tleLine1 = '1 25544U 98067A   24183.52332176  .00016717  00000+0  30164-3 0  9997';
+        const tleLine2 = '2 25544  51.6416 288.7505 0005786 312.9840 186.7455 15.50058983417757';
+        const satrec = satellite.twoline2satrec(tleLine1, tleLine2);
+
+        function updateISS() {
+            const now = new Date();
+            const pv = satellite.propagate(satrec, now);
+            const gmst = satellite.gstime(now);
+            const posGd = satellite.eciToGeodetic(pv.position, gmst);
+            
+            const lat = satellite.degreesLat(posGd.latitude);
+            const lon = satellite.degreesLong(posGd.longitude);
+            const vel = Math.sqrt(pv.velocity.x**2 + pv.velocity.y**2 + pv.velocity.z**2);
+
+            satMarker.setLatLng([lat, lon]);
+            
+            document.getElementById('iss-lat').innerText = lat.toFixed(4) + '°';
+            document.getElementById('iss-lon').innerText = lon.toFixed(4) + '°';
+            document.getElementById('iss-alt').innerText = posGd.height.toFixed(1) + ' km';
+            document.getElementById('iss-vel').innerText = (vel * 3.6).toFixed(0) + ' km/h';
+        }
+        setInterval(updateISS, 1000);
+        updateISS();
+
+        // 2. NASA APOD LOGIC
+        fetch('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY')
+            .then(res => res.json())
+            .then(data => {
+                const img = document.getElementById('apod-img');
+                img.src = data.url;
+                img.onload = () => {
+                    img.classList.remove('opacity-0');
+                    document.getElementById('apod-loader').style.display = 'none';
+                };
+                document.getElementById('apod-title').innerText = data.title;
+            })
+            .catch(() => document.getElementById('apod-title').innerText = "NASA Uplink Failed");
+
+        // 3. THREE.JS GALAXY SIMULATION (IFS Kinematics)
+        const canvas = document.getElementById('galaxy-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        canvas.appendChild(renderer.domElement);
+
+        // Create Particles
+        const geometry = new THREE.BufferGeometry();
+        const particlesCount = 3000;
+        const posArray = new Float32Array(particlesCount * 3);
+        const colorsArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i+=3) {
+            // Spiral distribution math
+            const radius = Math.random() * 5;
+            const theta = Math.random() * Math.PI * 2;
+            posArray[i] = Math.cos(theta) * radius + (Math.random() - 0.5) * 0.5;     // x
+            posArray[i+1] = (Math.random() - 0.5) * 0.8;                              // y (thickness)
+            posArray[i+2] = Math.sin(theta) * radius + (Math.random() - 0.5) * 0.5;   // z
+
+            // Colors (Fuchsia to Blue gradient)
+            colorsArray[i] = 0.8 + Math.random() * 0.2;     // R
+            colorsArray[i+1] = 0.2 + Math.random() * 0.3;   // G
+            colorsArray[i+2] = 0.9 + Math.random() * 0.1;   // B
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colorsArray, 3));
+
+        const material = new THREE.PointsMaterial({
+            size: 0.02,
+            vertexColors: true,
+            blending: THREE.AdditiveBlending,
+            transparent: true
+        });
+
+        const particlesMesh = new THREE.Points(geometry, material);
+        particlesMesh.rotation.x = Math.PI / 4;
+        scene.add(particlesMesh);
+
+        camera.position.z = 7;
+        camera.position.y = 2;
+
+        // Animation Loop
+        let mouseX = 0;
+        let mouseY = 0;
+        
+        canvas.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX / window.innerWidth) - 0.5;
+            mouseY = (event.clientY / window.innerHeight) - 0.5;
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            particlesMesh.rotation.y += 0.002;
+            
+            // Subtle interactive tilt
+            particlesMesh.rotation.x += (mouseY * 0.5 - particlesMesh.rotation.x + Math.PI/4) * 0.05;
+            particlesMesh.rotation.z += (mouseX * 0.5 - particlesMesh.rotation.z) * 0.05;
+            
+            renderer.render(scene, camera);
+        }
+        animate();
+        
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            if(canvas.clientWidth > 0) {
+                camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            }
+        });
+    </script>
+</body>
+</html>
