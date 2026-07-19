@@ -266,22 +266,37 @@
         }
 
         // Search API
+        // Search API
         function searchCards() {
-            const query = searchInput.value.trim() || 'Charizard';
+            // Boşlukları temizleyelim ve güvenli hale getirelim
+            let query = searchInput.value.trim() || 'Charizard';
+            // Eğer boşluklu bir isimse (örn: Roaring Moon), aralarına URL formatı koyalım
+            query = encodeURIComponent(query); 
+            
             loadingText.style.display = 'block';
+            loadingText.innerHTML = '> Fetching data payload...';
             grid.innerHTML = '';
 
-            // Using pageSize=12 to keep the grid neat
-            fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${query}"*&pageSize=12`)
-                .then(response => response.json())
+            // Tırnak işaretlerini kaldırdık, daha güvenli bir sorgu atıyoruz
+            fetch(`https://api.pokemontcg.io/v2/cards?q=name:${query}*&pageSize=12`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Sunucu Hatası: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     loadingText.style.display = 'none';
-                    displayCards(data.data);
+                    if (data && data.data) {
+                        displayCards(data.data);
+                    } else {
+                        throw new Error("Veri formatı tanınmadı.");
+                    }
                 })
                 .catch(error => {
                     loadingText.style.display = 'block';
-                    loadingText.innerHTML = '<span style="color:var(--amber);">> System Error: Uplink failed.</span>';
-                    console.error(error);
+                    loadingText.innerHTML = `<span style="color:var(--amber);">> System Error: ${error.message}</span>`;
+                    console.error('TCG API Error:', error);
                 });
         }
 
